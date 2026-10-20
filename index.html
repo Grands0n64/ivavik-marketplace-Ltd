@@ -4,67 +4,129 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ivavik Marketplace Ltd</title>
-    <!-- Tailwind CSS Engine for luxury styling -->
     <script src="https://tailwindcss.com"></script>
 </head>
-<!-- Premium Cream Background Colour -->
-<body class="bg-[#F5F0E6] font-sans min-h-screen text-gray-800">
+<body class="bg-[#F5F0E6] font-sans min-h-screen text-gray-800 pb-12">
 
-    <!-- 1. NAVIGATION BAR (Emerald Green) -->
+    <!-- NAVIGATION BAR -->
     <header class="bg-[#176B57] text-white p-4 sticky top-0 shadow-md z-50">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
             <h1 class="text-2xl font-black tracking-tight">IVAVIK <span class="text-gray-100 font-light">MARKETPLACE</span></h1>
-            <div id="cart-counter" class="font-bold cursor-pointer bg-[#115242] px-4 py-2 rounded-lg text-sm transition">
-                🛒 Cart (0)
-            </div>
+            <div class="font-bold bg-[#115242] px-4 py-2 rounded-lg text-sm">🛒 Cart (0)</div>
         </div>
     </header>
 
-    <!-- 2. MAIN STOREFRONT LAYOUT -->
-    <main class="max-w-6xl mx-auto p-4 mt-6">
-        <h2 class="text-xl font-bold mb-6 text-[#176B57] tracking-tight">Trending Premium Products</h2>
+    <!-- NIGERIAN CATEGORIES TAB BAR -->
+    <div class="bg-white border-b border-gray-200 sticky top-[68px] z-40 shadow-sm overflow-x-auto whitespace-nowrap">
+        <div class="max-w-6xl mx-auto px-4 flex gap-2 py-3">
+            <button onclick="filterCategory('All')" id="btn-All" class="cat-btn bg-[#176B57] text-white px-4 py-2 rounded-full text-xs font-bold uppercase transition">All Items</button>
+            <button onclick="filterCategory('Food Stuffs')" id="btn-FoodStuffs" class="cat-btn bg-gray-100 text-gray-600 px-4 py-2 rounded-full text-xs font-bold uppercase transition">🌾 Food Stuffs</button>
+            <button onclick="filterCategory('Gadgets')" id="btn-Gadgets" class="cat-btn bg-gray-100 text-gray-600 px-4 py-2 rounded-full text-xs font-bold uppercase transition">📱 Gadgets</button>
+            <button onclick="filterCategory('Sport Stuffs')" id="btn-SportStuffs" class="cat-btn bg-gray-100 text-gray-600 px-4 py-2 rounded-full text-xs font-bold uppercase transition">⚽ Sport Stuffs</button>
+            <button onclick="filterCategory('School Stuffs')" id="btn-SchoolStuffs" class="cat-btn bg-gray-100 text-gray-600 px-4 py-2 rounded-full text-xs font-bold uppercase transition">📚 School Stuffs</button>
+            <button onclick="filterCategory('House Materials')" id="btn-HouseMaterials" class="cat-btn bg-gray-100 text-gray-600 px-4 py-2 rounded-full text-xs font-bold uppercase transition">🏠 House Materials</button>
+        </div>
+    </div>
+
+    <!-- MAIN DASHBOARD CONTENT -->
+    <main class="max-w-6xl mx-auto p-4 mt-4">
+        <div class="flex justify-between items-center mb-6">
+            <h2 id="category-title" class="text-xl font-black text-[#176B57] tracking-tight">All Items</h2>
+            <span id="page-indicator" class="text-xs font-bold text-gray-500 bg-white px-3 py-1 rounded-full shadow-sm">Page 1</span>
+        </div>
         
-        <!-- THE EMPTY GRID CONTAINER: Our JavaScript will inject all white cards here automatically -->
+        <!-- PRODUCT RENDERING DISPLAY GRID -->
         <div id="product-grid" class="grid grid-cols-2 md:grid-cols-4 gap-6"></div>
+
+        <!-- PAGINATION INTERFACE CONTROLS -->
+        <div class="flex justify-center items-center gap-4 mt-12 bg-white max-w-xs mx-auto p-3 rounded-xl shadow-sm border border-gray-100">
+            <button onclick="changePage(-1)" id="prev-btn" class="px-4 py-2 bg-gray-100 text-gray-700 font-bold rounded-lg text-xs disabled:opacity-40 transition">Previous</button>
+            <span id="page-number-text" class="text-xs font-black text-gray-700">1</span>
+            <button onclick="changePage(1)" id="next-btn" class="px-4 py-2 bg-[#176B57] text-white font-bold rounded-lg text-xs disabled:opacity-40 transition">Next</button>
+        </div>
     </main>
 
-    <!-- 3. CONNECT INDEPENDENT PRODUCT DIRECTORY -->
+    <!-- CODE SYSTEM LINK COUPLING -->
     <script src="products.js"></script>
-    
-    <!-- 4. DYNAMIC CATALOGUE INJECTION SCRIPT -->
     <script>
-        // Check to ensure the products file loaded properly
-        const grid = document.getElementById('product-grid');
-        
-        if (typeof IVAVIK_INVENTORY !== 'undefined' && IVAVIK_INVENTORY.length > 0) {
-            // Loop through our array and print out clean white surface cards
-            IVAVIK_INVENTORY.forEach(product => {
-                const cardHtml = `
+        let currentCategory = "All";
+        let currentPage = 1;
+        const itemsPerPage = 12;
+        let activeFilteredList = [];
+
+        function renderStorefront() {
+            const grid = document.getElementById('product-grid');
+            grid.innerHTML = "";
+
+            // Filter global index down into chosen category
+            if (currentCategory === "All") {
+                activeFilteredList = IVAVIK_INVENTORY;
+            } else {
+                activeFilteredList = IVAVIK_INVENTORY.filter(p => p.category === currentCategory);
+            }
+
+            // Map layout dimensions for mathematical pagination slicing
+            const totalPages = Math.ceil(activeFilteredList.length / itemsPerPage);
+            if(currentPage > totalPages) currentPage = totalPages || 1;
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const itemsToDisplay = activeFilteredList.slice(startIndex, endIndex);
+
+            // Print out active items slice
+            itemsToDisplay.forEach(product => {
+                const card = `
                     <div class="bg-[#FFFFFF] p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-md transition">
                         <div class="relative bg-gray-50 rounded-lg overflow-hidden">
-                            <img src="${product.img}" alt="${product.name}" class="w-full h-44 object-cover rounded-md">
+                            <img src="${product.img}" alt="${product.name}" class="w-full h-40 object-cover rounded-md">
                         </div>
                         <div class="mt-3 flex-1 flex flex-col justify-between">
                             <div>
-                                <span class="text-[10px] uppercase font-black tracking-widest text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">${product.category}</span>
-                                <h3 class="font-semibold text-sm text-gray-800 mt-2 line-clamp-2 min-h-[40px]">${product.name}</h3>
+                                <span class="text-[9px] uppercase font-black tracking-widest text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">${product.category}</span>
+                                <h3 class="font-semibold text-xs text-gray-800 mt-2 line-clamp-2 min-h-[32px]">${product.name}</h3>
                             </div>
-                            <div class="mt-4">
-                                <p class="text-lg font-black text-[#176B57]">₦${product.price.toLocaleString()}</p>
-                                <button onclick="alert('${product.name} added to cart!')" class="w-full mt-3 bg-[#176B57] hover:bg-[#115242] text-white text-xs font-bold py-2.5 rounded-lg transition uppercase tracking-wider">
-                                    Add to Cart
-                                </button>
+                            <div class="mt-3">
+                                <p class="text-base font-black text-[#176B57]">₦${product.price.toLocaleString()}</p>
+                                <button onclick="alert('${product.name} added to cart!')" class="w-full mt-2 bg-[#176B57] text-white text-[10px] font-bold py-2 rounded-md transition uppercase tracking-wider">Add to Cart</button>
                             </div>
                         </div>
                     </div>
                 `;
-                grid.innerHTML += cardHtml;
+                grid.innerHTML += card;
             });
-        } else {
-            // Error fallback message if products.js is empty or missing
-            grid.innerHTML = '<p class="text-gray-500 text-center col-span-full">Loading marketplace products...</p>';
-        }
-    </script>
 
+            // Handle UI button states
+            document.getElementById('page-indicator').innerText = `Displaying ${startIndex + 1}-${Math.min(endIndex, activeFilteredList.length)} of ${activeFilteredList.length}`;
+            document.getElementById('page-number-text').innerText = currentPage;
+            document.getElementById('prev-btn').disabled = (currentPage === 1);
+            document.getElementById('next-btn').disabled = (currentPage === totalPages || totalPages === 0);
+        }
+
+        function filterCategory(cat) {
+            currentCategory = cat;
+            currentPage = 1;
+            document.getElementById('category-title').innerText = cat === "All" ? "All Items" : cat;
+            
+            // Switch style highlighting states across tabs
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.classList.remove('bg-[#176B57]', 'text-white');
+                btn.classList.add('bg-gray-100', 'text-gray-600');
+            });
+            const safeId = 'btn-' + cat.replace(/\s+/g, '');
+            document.getElementById(safeId).classList.remove('bg-gray-100', 'text-gray-600');
+            document.getElementById(safeId).classList.add('bg-[#176B57]', 'text-white');
+
+            renderStorefront();
+        }
+
+        function changePage(direction) {
+            currentPage += direction;
+            renderStorefront();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Run core system on boot up configuration
+        window.onload = renderStorefront;
+    </script>
 </body>
 </html>
